@@ -1,0 +1,89 @@
+{% extends "base_app.html" %}
+{% set active_tab = 'planos' %}
+{% block main_content %}
+<div class="space-y-6" x-data="{ openEditModal: false, editPlan: {} }">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="p-4 text-sm rounded-xl border {{ 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' if category == 'success' else 'bg-red-500/20 border-red-500/30 text-red-300' }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for plan in plans %}
+        <div class="{{ bg_style.card_bg }} p-6 rounded-2xl border border-white/5 shadow-xl flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-center">
+                    <span class="px-3 py-1 {{ theme.badge }} rounded-full text-xs font-bold">{{ plan.title }}</span>
+                    {% if current_user.role in ['barber', 'admin'] %}
+                    <button @click="openEditModal = true; editPlan = { id: '{{ plan.id }}', title: '{{ plan.title }}', price_text: '{{ plan.price_text }}', description: '{{ plan.description }}', features: `{{ plan.features }}` }" class="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg font-bold transition-all">
+                        <i class="fa-solid fa-pen-to-square mr-1"></i> Editar
+                    </button>
+                    {% endif %}
+                </div>
+                <h3 class="text-2xl font-black mt-4">{{ plan.price_text }}</h3>
+                <p class="text-xs opacity-70 mt-2">{{ plan.description }}</p>
+                
+                <ul class="space-y-2 mt-6 text-sm opacity-80">
+                    {% for feature in plan.features.split('\n') %}
+                    {% if feature.strip() %}
+                    <li><i class="fa-solid fa-check {{ theme.text }} mr-2"></i> {{ feature.strip() }}</li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            <button class="mt-8 w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg">
+                Assinar Plano
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DO PLANO -->
+    <div x-show="openEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" x-cloak>
+        <div class="{{ bg_style.card_bg }} border border-white/10 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                <h3 class="text-lg font-bold {{ theme.text }}">Editar Informações do Plano</h3>
+                <button @click="openEditModal = false" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form method="POST" action="{{ url_for('shared_planos') }}" class="space-y-4">
+                <input type="hidden" name="plan_id" :value="editPlan.id">
+                
+                <div>
+                    <label class="block text-xs uppercase opacity-70 font-semibold mb-1">Título do Plano</label>
+                    <input type="text" name="title" :value="editPlan.title" required class="w-full px-4 py-2.5 bg-black/20 border border-white/10 rounded-xl text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs uppercase opacity-70 font-semibold mb-1">Texto de Preço</label>
+                    <input type="text" name="price_text" :value="editPlan.price_text" required class="w-full px-4 py-2.5 bg-black/20 border border-white/10 rounded-xl text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs uppercase opacity-70 font-semibold mb-1">Descrição Breve</label>
+                    <input type="text" name="description" :value="editPlan.description" required class="w-full px-4 py-2.5 bg-black/20 border border-white/10 rounded-xl text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs uppercase opacity-70 font-semibold mb-1">Recursos (um por linha)</label>
+                    <textarea name="features" rows="4" :value="editPlan.features" required class="w-full px-4 py-2.5 bg-black/20 border border-white/10 rounded-xl text-sm"></textarea>
+                </div>
+
+                <div class="flex space-x-3 pt-2">
+                    <button type="submit" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all">
+                        Salvar Alterações
+                    </button>
+                    <button type="button" @click="openEditModal = false" class="px-4 py-3 bg-white/10 hover:bg-white/20 font-bold rounded-xl transition-all">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

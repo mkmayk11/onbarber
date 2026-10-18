@@ -1,0 +1,83 @@
+{% extends "base_app.html" %}
+{% set active_tab = 'perfil' %}
+{% block main_content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="p-4 text-sm rounded-xl mb-4 border {{ 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' if category == 'success' else 'bg-red-500/20 border-red-500/30 text-red-300' }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="{{ bg_style.card_bg }} p-6 rounded-2xl border border-white/5 shadow-xl space-y-6">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-id-card {{ theme.text }}"></i> Meu Perfil & Personalização
+        </h3>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            <!-- Dados Cadastrais -->
+            <div>
+                <label class="block text-xs uppercase opacity-70 font-semibold mb-1">Nome Completo</label>
+                <input type="text" readonly value="{{ current_user.name }}" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-sm opacity-80 cursor-not-allowed">
+            </div>
+
+            <div>
+                <label class="block text-xs uppercase opacity-70 font-semibold mb-1">E-mail Cadastrado</label>
+                <input type="email" readonly value="{{ current_user.email }}" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-sm opacity-80 cursor-not-allowed">
+            </div>
+
+            <div>
+                <label class="block text-xs uppercase opacity-70 font-semibold mb-1">Barbearia Vinculada</label>
+                <input type="text" readonly value="{{ current_user.barbershop.name if current_user.barbershop else 'Nenhuma' }}" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-sm opacity-80 cursor-not-allowed">
+            </div>
+
+            <!-- Bio do Barbeiro -->
+            <div>
+                <label class="block text-xs uppercase opacity-70 font-semibold mb-1">Sua Biografia / Apresentação</label>
+                <textarea name="bio" rows="3" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-sm" placeholder="Escreva um breve resumo sobre você...">{{ current_user.bio }}</textarea>
+            </div>
+
+            <!-- Atualizar Foto de Perfil -->
+            <div>
+                <label class="block text-xs uppercase opacity-70 font-semibold mb-1">Foto de Perfil</label>
+                <input type="file" name="avatar" accept="image/*" class="w-full text-xs opacity-70 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:{{ theme.text }}">
+            </div>
+
+            <!-- Trocar Tema/Cores Individuais -->
+            <div class="pt-2 border-t border-white/5 space-y-4">
+                <div>
+                    <label class="block text-xs uppercase opacity-70 font-semibold mb-2">Sua Cor de Destaque</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {% for t in themes %}
+                        <label class="relative flex items-center p-2.5 rounded-xl border border-white/10 bg-black/20 cursor-pointer hover:border-white/30 has-[:checked]:border-emerald-500 transition-all">
+                            <input type="radio" name="theme_id" value="{{ t.id }}" {% if current_user.theme_id == t.id %}checked{% endif %} class="hidden">
+                            <div class="w-5 h-5 rounded-full bg-gradient-to-tr {{ t.bg_gradient }} shrink-0 border border-white/20"></div>
+                            <span class="ml-2 text-xs font-bold">{{ t.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs uppercase opacity-70 font-semibold mb-2">Sua Cor de Fundo</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {% for key, bg in backgrounds.items() %}
+                        <label class="relative flex items-center p-2.5 rounded-xl border border-white/10 bg-black/20 cursor-pointer hover:border-white/30 has-[:checked]:border-emerald-500 transition-all">
+                            <input type="radio" name="bg_id" value="{{ key }}" {% if current_user.bg_id == key %}checked{% endif %} class="hidden">
+                            <span class="text-xs font-bold">{{ bg.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition-all">
+                SALVAR PERFIL E PREFERÊNCIAS
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

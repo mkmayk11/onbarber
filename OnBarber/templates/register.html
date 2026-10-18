@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex items-center justify-center min-h-screen px-4 py-10 bg-[#121214]">
+    <div class="w-full max-w-xl p-8 space-y-6 bg-[#1a1a1e] border border-white/10 rounded-2xl shadow-2xl text-gray-100">
+        <div class="text-center">
+            <h2 class="text-2xl font-bold text-emerald-400">Criar Nova Conta</h2>
+            <p class="text-xs text-gray-400 mt-1">Crie a sua conta e personalize as cores da sua plataforma</p>
+        </div>
+
+        <form class="space-y-4" method="POST" enctype="multipart/form-data">
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Nome Completo</label>
+                <input type="text" name="name" required placeholder="Seu Nome" class="w-full px-4 py-3 bg-[#121214] border border-white/10 rounded-xl text-sm text-white">
+            </div>
+
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">E-mail</label>
+                <input type="email" name="email" required placeholder="seu@email.com" class="w-full px-4 py-3 bg-[#121214] border border-white/10 rounded-xl text-sm text-white">
+            </div>
+
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Senha</label>
+                <input type="password" name="password" required placeholder="••••••••" class="w-full px-4 py-3 bg-[#121214] border border-white/10 rounded-xl text-sm text-white">
+            </div>
+
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Tipo de Conta</label>
+                <select name="role" required class="w-full px-4 py-3 bg-[#121214] border border-white/10 rounded-xl text-sm text-white">
+                    <option value="client">Cliente</option>
+                    <option value="barber">Barbeiro / Dono de Barbearia</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Foto de Perfil (Opcional)</label>
+                <input type="file" name="avatar" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/20 file:text-emerald-400">
+            </div>
+
+            <!-- Seleção de Tema e Cores para o Usuário -->
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-2">Cor dos Detalhes / Destaque</label>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {% for theme in themes %}
+                    <label class="relative flex items-center p-2.5 rounded-xl border border-white/10 bg-[#121214] cursor-pointer hover:border-white/30 has-[:checked]:border-emerald-500 transition-all">
+                        <input type="radio" name="theme_id" value="{{ theme.id }}" {% if loop.first %}checked{% endif %} class="hidden">
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-tr {{ theme.bg_gradient }} shrink-0 border border-white/20"></div>
+                        <span class="ml-2 text-xs font-bold text-white">{{ theme.name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-2">Cor de Fundo da Sua Conta</label>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {% for key, bg in backgrounds.items() %}
+                    <label class="relative flex items-center p-2.5 rounded-xl border border-white/10 bg-[#121214] cursor-pointer hover:border-white/30 has-[:checked]:border-emerald-500 transition-all">
+                        <input type="radio" name="bg_id" value="{{ key }}" {% if loop.first %}checked{% endif %} class="hidden">
+                        <span class="text-xs font-bold text-white">{{ bg.name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition-all">
+                CRIAR CONTA
+            </button>
+        </form>
+
+        <p class="text-xs text-center text-gray-400">
+            Já tem uma conta? <a href="{{ url_for('login') }}" class="text-emerald-400 font-bold hover:underline">Fazer Login</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

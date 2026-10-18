@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex flex-col md:flex-row min-h-screen" x-data="{ tab: 'inicio' }">
+    <!-- Sidebar Estilo Layout Enviado -->
+    <aside class="w-full md:w-64 bg-sidebarBg border-r border-white/5 p-6 flex flex-col justify-between shrink-0">
+        <div>
+            <div class="text-2xl font-black text-emerald-400 tracking-wider mb-8">ONBARBER</div>
+            <nav class="space-y-2">
+                <button @click="tab = 'inicio'" :class="tab === 'inicio' ? 'bg-emerald-500/10 text-emerald-400' : 'text-gray-400 hover:text-white'" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all">
+                    <i class="fa-solid fa-house"></i> <span>Início</span>
+                </button>
+                <button @click="tab = 'agendamentos'" :class="tab === 'agendamentos' ? 'bg-emerald-500/10 text-emerald-400' : 'text-gray-400 hover:text-white'" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all">
+                    <i class="fa-solid fa-calendar-days"></i> <span>Agendamentos</span>
+                </button>
+                <button @click="tab = 'planos'" :class="tab === 'planos' ? 'bg-emerald-500/10 text-emerald-400' : 'text-gray-400 hover:text-white'" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all">
+                    <i class="fa-solid fa-gem"></i> <span>Planos Disponíveis</span>
+                </button>
+                <button @click="tab = 'perfil'" :class="tab === 'perfil' ? 'bg-emerald-500/10 text-emerald-400' : 'text-gray-400 hover:text-white'" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all">
+                    <i class="fa-solid fa-user"></i> <span>Meu Perfil</span>
+                </button>
+            </nav>
+        </div>
+        <div class="pt-4 border-t border-white/5">
+            <a href="{{ url_for('logout') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors font-medium">
+                <i class="fa-solid fa-right-from-bracket"></i> <span>Sair</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <div class="flex-1 p-4 md:p-8 space-y-8 bg-darkBg overflow-y-auto">
+        <!-- Top Bar -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-cardBg p-5 rounded-2xl border border-white/5 shadow-xl gap-4">
+            <div class="flex items-center space-x-4">
+                <img src="{{ current_user.barbershop.image_url if current_user.barbershop else 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=400' }}" class="w-12 h-12 rounded-full object-cover border-2 border-emerald-500 shadow-md">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        {{ current_user.name }}
+                        <span class="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full font-semibold">Barbeiro</span>
+                    </h2>
+                    <p class="text-xs text-emerald-400 font-medium">{{ current_user.barbershop.name if current_user.barbershop else 'Minha Barbearia' }}</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-gray-400 block">Saldo Acumulado</span>
+                <span class="text-2xl font-black text-emerald-400">R$ {{ "%.2f"|format(total_revenue) }}</span>
+            </div>
+        </header>
+
+        <!-- ABA INÍCIO (Gráficos e Indicadores) -->
+        <div x-show="tab === 'inicio'" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div class="bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl">
+                    <p class="text-xs font-semibold text-gray-400 uppercase">Receita Diária</p>
+                    <h3 class="text-2xl font-black text-emerald-400 mt-2">R$ {{ "%.2f"|format(total_revenue * 0.2) }}</h3>
+                    <span class="text-xs text-emerald-400 mt-1 block"><i class="fa-solid fa-arrow-up"></i> +12% vs ontem</span>
+                </div>
+                <div class="bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl">
+                    <p class="text-xs font-semibold text-gray-400 uppercase">Receita Semanal</p>
+                    <h3 class="text-2xl font-black text-cyan-400 mt-2">R$ {{ "%.2f"|format(total_revenue * 0.7) }}</h3>
+                    <span class="text-xs text-cyan-400 mt-1 block"><i class="fa-solid fa-arrow-up"></i> +8% vs semana passada</span>
+                </div>
+                <div class="bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl">
+                    <p class="text-xs font-semibold text-gray-400 uppercase">Receita Mensal</p>
+                    <h3 class="text-2xl font-black text-purple-400 mt-2">R$ {{ "%.2f"|format(total_revenue) }}</h3>
+                    <span class="text-xs text-purple-400 mt-1 block"><i class="fa-solid fa-arrow-up"></i> +25% meta mensal</span>
+                </div>
+            </div>
+
+            <!-- Gráfico Interativo -->
+            <div class="bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl">
+                <h3 class="text-md font-bold mb-4 text-white">Desempenho Financeiro (Visão Geral)</h3>
+                <div class="h-72">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA AGENDAMENTOS (Calendário e Horários) -->
+        <div x-show="tab === 'agendamentos'" class="space-y-6">
+            <div class="bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-emerald-400"></i> Seletor de Agenda e Horários
+                    </h3>
+                    <form method="GET" class="flex items-center gap-2">
+                        <input type="date" name="date" value="{{ selected_date }}" class="px-4 py-2 bg-darkBg border border-white/10 rounded-xl text-sm text-white focus:border-emerald-500">
+                        <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold transition-all">Filtrar</button>
+                    </form>
+                </div>
+
+                <!-- Grade de Horários -->
+                <div>
+                    <h4 class="text-xs uppercase text-gray-400 tracking-wider font-semibold mb-3">Horários do dia {{ selected_date }}</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        {% for time in all_times %}
+                            {% set is_booked = time in booked_times %}
+                            <div class="p-3 rounded-xl border text-center text-sm font-bold flex flex-col justify-between items-center transition-all {% if is_booked %} bg-red-500/10 border-red-500/30 text-red-400 {% else %} bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-lg shadow-emerald-500/5 {% endif %}">
+                                <span>{{ time }}</span>
+                                <span class="text-xs font-normal mt-1 {% if is_booked %} text-red-400 {% else %} text-emerald-400 {% endif %}">
+                                    {{ 'Ocupado' if is_booked else 'Disponível' }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Lista de Agendamentos Cadastrados -->
+                <div class="pt-6 border-t border-white/5">
+                    <h4 class="text-md font-bold text-white mb-4">Seus Clientes Agendados</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-white/5 text-gray-400 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">Cliente</th>
+                                    <th class="p-3">Data</th>
+                                    <th class="p-3">Horário</th>
+                                    <th class="p-3">Valor</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                {% for app in appointments %}
+                                <tr>
+                                    <td class="p-3 font-medium text-white">{{ app.client.name }}</td>
+                                    <td class="p-3 text-gray-400">{{ app.date }}</td>
+                                    <td class="p-3 text-emerald-400 font-bold">{{ app.time }}</td>
+                                    <td class="p-3 text-gray-300">R$ {{ "%.2f"|format(app.price) }}</td>
+                                    <td class="p-3">
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ 'bg-emerald-500/20 text-emerald-400' if app.status == 'Confirmado' else 'bg-red-500/20 text-red-400' }}">
+                                            {{ app.status }}
+                                        </span>
+                                    </td>
+                                    <td class="p-3 text-right">
+                                        {% if app.status == 'Confirmado' %}
+                                        <a href="{{ url_for('cancel_appointment', id=app.id) }}" class="px-3 py-1 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg text-xs font-bold transition-all">Remover</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum agendamento registrado.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA PLANOS DISPONÍVEIS -->
+        <div x-show="tab === 'planos'" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-bold">Plano Pro</span>
+                        <h3 class="text-2xl font-black text-white mt-4">R$ 49,90 <span class="text-xs text-gray-400">/mês</span></h3>
+                        <p class="text-xs text-gray-400 mt-2">Ideal para barbeiros autônomos que desejam escala total.</p>
+                        <ul class="space-y-2 mt-6 text-sm text-gray-300">
+                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i> Agendamentos ilimitados</li>
+                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i> Relatórios avançados</li>
+                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i> Suporte prioritário 24/7</li>
+                        </ul>
+                    </div>
+                    <button class="mt-8 w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all">Plano Atual</button>
+                </div>
+                <div class="bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <span class="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs font-bold">Plano Enterprise</span>
+                        <h3 class="text-2xl font-black text-white mt-4">R$ 119,90 <span class="text-xs text-gray-400">/mês</span></h3>
+                        <p class="text-xs text-gray-400 mt-2">Para barbearias de grande porte com múltiplos profissionais.</p>
+                        <ul class="space-y-2 mt-6 text-sm text-gray-300">
+                            <li><i class="fa-solid fa-check text-purple-400 mr-2"></i> Múltiplos barbeiros na mesma conta</li>
+                            <li><i class="fa-solid fa-check text-purple-400 mr-2"></i> Automação via WhatsApp</li>
+                            <li><i class="fa-solid fa-check text-purple-400 mr-2"></i> Aplicativo dedicado</li>
+                        </ul>
+                    </div>
+                    <button class="mt-8 w-full py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all">Fazer Upgrade</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA PERFIL -->
+        <div x-show="tab === 'perfil'" class="space-y-6">
+            <div class="bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl max-w-xl space-y-4">
+                <h3 class="text-lg font-bold text-white">Configurações de Perfil</h3>
+                <div>
+                    <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Nome</label>
+                    <input type="text" readonly value="{{ current_user.name }}" class="w-full px-4 py-3 bg-darkBg border border-white/10 rounded-xl text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">E-mail</label>
+                    <input type="email" readonly value="{{ current_user.email }}" class="w-full px-4 py-3 bg-darkBg border border-white/10 rounded-xl text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Barbearia Vinculada</label>
+                    <input type="text" readonly value="{{ current_user.barbershop.name if current_user.barbershop else 'Nenhuma' }}" class="w-full px-4 py-3 bg-darkBg border border-white/10 rounded-xl text-sm text-white">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            datasets: [{
+                label: 'Faturamento (R$)',
+                data: [120, 250, 180, 320, 450, 680, 410],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } }
+            }
+        }
+    });
+</script>
+{% endblock %}

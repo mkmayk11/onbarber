@@ -1,0 +1,171 @@
+{% extends "base_app.html" %}
+{% set active_tab = 'inicio' %}
+{% block main_content %}
+<div class="space-y-8">
+    <!-- Header com Saldo e Pontos -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-white">Olá, {{ current_user.name }}</h1>
+            <p class="text-xs text-gray-400">Agende seu horário e acumule pontos para trocar por vantagens</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <!-- Saldo -->
+            <a href="{{ url_for('client_deposit') }}" class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-right transition-all hover:border-emerald-500">
+                <span class="text-[10px] uppercase text-gray-400 block font-bold">Saldo em Conta <i class="fa-solid fa-plus text-emerald-400 ml-1"></i></span>
+                <span class="text-lg font-black text-emerald-400">R$ {{ "%.2f"|format(current_user.balance) }}</span>
+            </a>
+            <!-- Pontos -->
+            <div class="px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-xl text-right">
+                <span class="text-[10px] uppercase text-gray-400 block font-bold">Seus Pontos</span>
+                <span class="text-lg font-black text-amber-400"><i class="fa-solid fa-trophy"></i> {{ current_user.points }} pts</span>
+            </div>
+            <a href="{{ url_for('logout') }}" class="px-3 py-2 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-xl text-xs font-bold transition-all">Sair</a>
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="p-4 text-sm rounded-xl border {{ 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' if category == 'success' else 'bg-red-500/20 border-red-500/30 text-red-300' }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Formulário de Agendamento -->
+        <div class="lg:col-span-2 bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl space-y-6">
+            <h3 class="text-lg font-bold text-white">1. Escolha o Barbeiro & Data</h3>
+            <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Barbeiro</label>
+                    <select name="barber_id" onchange="this.form.submit()" class="w-full px-4 py-3 bg-darkBg border border-white/10 rounded-xl text-sm text-white focus:border-emerald-500">
+                        <option value="">Selecione o barbeiro...</option>
+                        {% for b in barbers %}
+                        <option value="{{ b.id }}" {% if selected_barber_id == b.id %}selected{% endif %}>{{ b.barbershop.name if b.barbershop else b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Data do Corte</label>
+                    <input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()" class="w-full px-4 py-3 bg-darkBg border border-white/10 rounded-xl text-sm text-white focus:border-emerald-500">
+                </div>
+            </form>
+
+            {% if selected_barber_id %}
+            <div class="pt-4 border-t border-white/5 space-y-6">
+                <form method="POST" class="space-y-6">
+                    <input type="hidden" name="barber_id" value="{{ selected_barber_id }}">
+                    <input type="hidden" name="date" value="{{ selected_date }}">
+                    
+                    <!-- Seleção de Serviço -->
+                    <div>
+                        <h3 class="text-lg font-bold text-white mb-3">2. Escolha o Serviço (Ganha Pontos)</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <label class="p-4 bg-darkBg border border-white/10 rounded-xl cursor-pointer hover:border-emerald-500 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/10 transition-all">
+                                <input type="radio" name="service_key" value="corte" checked class="hidden">
+                                <span class="block text-sm font-bold text-white">Corte Simples</span>
+                                <span class="text-xs text-emerald-400 font-bold block mt-1">R$ 35,00</span>
+                                <span class="text-[10px] text-amber-400 mt-2 block font-semibold"><i class="fa-solid fa-trophy"></i> +6 pontos</span>
+                            </label>
+
+                            <label class="p-4 bg-darkBg border border-white/10 rounded-xl cursor-pointer hover:border-emerald-500 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/10 transition-all">
+                                <input type="radio" name="service_key" value="corte_barba" class="hidden">
+                                <span class="block text-sm font-bold text-white">Corte + Barba</span>
+                                <span class="text-xs text-emerald-400 font-bold block mt-1">R$ 60,00</span>
+                                <span class="text-[10px] text-amber-400 mt-2 block font-semibold"><i class="fa-solid fa-trophy"></i> +12 pontos</span>
+                            </label>
+
+                            <label class="p-4 bg-darkBg border border-white/10 rounded-xl cursor-pointer hover:border-emerald-500 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/10 transition-all">
+                                <input type="radio" name="service_key" value="corte_barba_hidra" class="hidden">
+                                <span class="block text-sm font-bold text-white">Corte + Barba + Hidratação</span>
+                                <span class="text-xs text-emerald-400 font-bold block mt-1">R$ 90,00</span>
+                                <span class="text-[10px] text-amber-400 mt-2 block font-semibold"><i class="fa-solid fa-trophy"></i> +20 pontos</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Horários -->
+                    <div>
+                        <h3 class="text-lg font-bold text-white mb-3">3. Escolha o Horário Disponível</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                            {% for time in all_times %}
+                                {% set is_booked = time in booked_times %}
+                                <label class="relative flex items-center justify-center p-3 rounded-xl border text-sm font-bold cursor-pointer transition-all {% if is_booked %} bg-red-500/10 border-red-500/30 text-red-500 opacity-50 cursor-not-allowed {% else %} bg-darkBg border-white/10 hover:border-emerald-500 text-white has-[:checked]:bg-emerald-500 has-[:checked]:border-emerald-500 has-[:checked]:text-white shadow-md {% endif %}">
+                                    <input type="radio" name="time" value="{{ time }}" required {% if is_booked %}disabled{% endif %} class="hidden">
+                                    <span>{{ time }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Opção de Pagamento com Saldo -->
+                    <div class="p-4 bg-darkBg border border-emerald-500/30 rounded-xl flex items-center justify-between">
+                        <div>
+                            <span class="text-sm font-bold text-white block">Pagar agora usando Saldo da Conta</span>
+                            <span class="text-xs text-emerald-400 font-semibold"><i class="fa-solid fa-bolt"></i> Ganhe PONTOS EM DOBRO ao pagar com saldo!</span>
+                            <span class="text-xs text-gray-400 block mt-0.5">Seu saldo: R$ {{ "%.2f"|format(current_user.balance) }}</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="pay_with_balance" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition-all">
+                        CONFIRMAR AGENDAMENTO
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Ranking dos Clientes e Histórico -->
+        <div class="space-y-6">
+            <div class="bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl space-y-4">
+                <h3 class="text-lg font-bold text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy"></i> Ranking dos Clientes
+                </h3>
+                <div class="space-y-3">
+                    {% for c in clients_ranking %}
+                    <div class="p-3 bg-darkBg border border-white/5 rounded-xl flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-6 h-6 flex items-center justify-center rounded-full font-black text-xs {{ 'bg-amber-400 text-black' if loop.index == 1 else ('bg-gray-300 text-black' if loop.index == 2 else ('bg-amber-700 text-white' if loop.index == 3 else 'bg-white/10 text-gray-400')) }}">
+                                {{ loop.index }}
+                            </span>
+                            <span class="text-sm font-bold text-white">{{ c.name }}</span>
+                        </div>
+                        <span class="text-xs font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full">{{ c.points }} pts</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Meus Agendamentos -->
+            <div class="bg-cardBg p-6 rounded-2xl border border-white/5 shadow-xl space-y-4">
+                <h3 class="text-lg font-bold text-white">Meus Agendamentos</h3>
+                <div class="space-y-3">
+                    {% for app in my_appointments %}
+                    <div class="p-4 bg-darkBg border border-white/5 rounded-xl flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-bold text-white">{{ app.barber.name }}</p>
+                            <p class="text-xs text-gray-300">{{ app.service_name }}</p>
+                            <p class="text-xs text-gray-400">{{ app.date }} às <span class="text-emerald-400 font-bold">{{ app.time }}</span></p>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full inline-block mt-1 font-bold {{ 'bg-emerald-500/20 text-emerald-400' if app.is_paid else 'bg-gray-500/20 text-gray-400' }}">
+                                {{ 'PAGO COM SALDO' if app.is_paid else 'Pagar na barbearia' }}
+                            </span>
+                        </div>
+                        {% if app.status == 'Confirmado' %}
+                        <a href="{{ url_for('cancel_appointment', id=app.id) }}" class="text-red-400 hover:text-red-300 text-xs font-bold">Cancelar</a>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-gray-500 text-center py-4">Sem agendamentos ativos.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

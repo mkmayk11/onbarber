@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ custom_shop_name }} - Painel do Barbeiro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#121214',
+                        cardBg: '#1a1a1e',
+                        sidebarBg: '#18181b'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-darkBg text-gray-100 font-sans antialiased min-h-screen flex flex-col">
+    
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar com Tema Dinâmico -->
+        <aside class="w-full md:w-64 bg-sidebarBg border-r border-white/5 p-6 flex flex-col justify-between shrink-0">
+            <div>
+                <!-- Nome Dinâmico da Barbearia -->
+                <div class="text-xl font-black {{ theme.text }} tracking-wider mb-8 uppercase truncate" title="{{ custom_shop_name }}">
+                    {{ custom_shop_name }}
+                </div>
+                <nav class="space-y-2">
+                    <a href="{{ url_for('barber_inicio') }}" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all {% if active_tab == 'inicio' %} bg-white/10 {{ theme.text }} {% else %} text-gray-400 hover:text-white hover:bg-white/5 {% endif %}">
+                        <i class="fa-solid fa-house"></i> <span>Início</span>
+                    </a>
+                    <a href="{{ url_for('barber_agendamentos') }}" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all {% if active_tab == 'agendamentos' %} bg-white/10 {{ theme.text }} {% else %} text-gray-400 hover:text-white hover:bg-white/5 {% endif %}">
+                        <i class="fa-solid fa-calendar-days"></i> <span>Agendamentos</span>
+                    </a>
+                    <a href="{{ url_for('shared_planos') }}" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all {% if active_tab == 'planos' %} bg-white/10 {{ theme.text }} {% else %} text-gray-400 hover:text-white hover:bg-white/5 {% endif %}">
+                        <i class="fa-solid fa-gem"></i> <span>Planos Disponíveis</span>
+                    </a>
+                    <a href="{{ url_for('barber_perfil') }}" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all {% if active_tab == 'perfil' %} bg-white/10 {{ theme.text }} {% else %} text-gray-400 hover:text-white hover:bg-white/5 {% endif %}">
+                        <i class="fa-solid fa-user"></i> <span>Meu Perfil</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="pt-4 border-t border-white/5">
+                <a href="{{ url_for('logout') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors font-medium">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span>Sair</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <div class="flex-1 p-4 md:p-8 space-y-8 bg-darkBg overflow-y-auto">
+            <!-- Top Bar -->
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-cardBg p-5 rounded-2xl border border-white/5 shadow-xl gap-4">
+                <div class="flex items-center space-x-4">
+                    <img src="{{ current_user.barbershop.image_url if current_user.barbershop else 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=400' }}" class="w-12 h-12 rounded-full object-cover border-2 {{ theme.border }} shadow-md">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            {{ current_user.name }}
+                            <span class="text-xs px-2 py-0.5 {{ theme.badge }} rounded-full font-semibold">Barbeiro</span>
+                        </h2>
+                        <p class="text-xs {{ theme.text }} font-medium">{{ current_user.barbershop.name if current_user.barbershop else 'Minha Barbearia' }}</p>
+                    </div>
+                </div>
+            </header>
+
+            {% block barber_content %}{% endblock %}
+        </div>
+    </div>
+
+</body>
+</html>

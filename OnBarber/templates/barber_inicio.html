@@ -1,0 +1,98 @@
+{% extends "base_app.html" %}
+{% set active_tab = 'inicio' %}
+{% block main_content %}
+<div class="space-y-6">
+    <!-- Cards de Receita Clicáveis -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <a href="{{ url_for('barber_inicio', filter='day') }}" class="{{ bg_style.card_bg }} p-6 rounded-2xl border transition-all hover:scale-[1.02] shadow-xl {% if current_filter == 'day' %} {{ theme.border }} bg-opacity-10 {% else %} border-white/5 {% endif %}">
+            <p class="text-xs font-semibold opacity-70 uppercase">Receita Diária (Hoje)</p>
+            <h3 class="text-2xl font-black {{ theme.text }} mt-2">R$ {{ "%.2f"|format(daily_rev) }}</h3>
+            <span class="text-xs {{ theme.text }} mt-1 block"><i class="fa-solid fa-filter"></i> Clique para ver cortes</span>
+        </a>
+        <a href="{{ url_for('barber_inicio', filter='week') }}" class="{{ bg_style.card_bg }} p-6 rounded-2xl border transition-all hover:scale-[1.02] shadow-xl {% if current_filter == 'week' %} {{ theme.border }} bg-opacity-10 {% else %} border-white/5 {% endif %}">
+            <p class="text-xs font-semibold opacity-70 uppercase">Receita Semanal</p>
+            <h3 class="text-2xl font-black {{ theme.text }} mt-2">R$ {{ "%.2f"|format(weekly_rev) }}</h3>
+            <span class="text-xs {{ theme.text }} mt-1 block"><i class="fa-solid fa-filter"></i> Clique para ver cortes</span>
+        </a>
+        <a href="{{ url_for('barber_inicio', filter='month') }}" class="{{ bg_style.card_bg }} p-6 rounded-2xl border transition-all hover:scale-[1.02] shadow-xl {% if current_filter == 'month' %} {{ theme.border }} bg-opacity-10 {% else %} border-white/5 {% endif %}">
+            <p class="text-xs font-semibold opacity-70 uppercase">Receita Mensal</p>
+            <h3 class="text-2xl font-black {{ theme.text }} mt-2">R$ {{ "%.2f"|format(monthly_rev) }}</h3>
+            <span class="text-xs {{ theme.text }} mt-1 block"><i class="fa-solid fa-filter"></i> Clique para ver cortes</span>
+        </a>
+    </div>
+
+    <!-- Gráfico Interativo -->
+    <div class="{{ bg_style.card_bg }} p-6 rounded-2xl border border-white/5 shadow-xl">
+        <h3 class="text-md font-bold mb-4">Desempenho Financeiro (Últimos 7 Dias)</h3>
+        <div class="h-72">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Tabela de Cortes Filtrados -->
+    <div class="{{ bg_style.card_bg }} p-6 rounded-2xl border border-white/5 shadow-xl">
+        <h3 class="text-lg font-bold mb-4">{{ filter_title }}</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-black/10 opacity-70 uppercase text-xs">
+                    <tr>
+                        <th class="p-3">Cliente</th>
+                        <th class="p-3">Serviço</th>
+                        <th class="p-3">Data</th>
+                        <th class="p-3">Horário</th>
+                        <th class="p-3">Valor</th>
+                        <th class="p-3">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for app in filtered_appointments %}
+                    <tr>
+                        <td class="p-3 font-medium">{{ app.client.name }}</td>
+                        <td class="p-3 opacity-80">{{ app.service_name }}</td>
+                        <td class="p-3 opacity-70">{{ app.date }}</td>
+                        <td class="p-3 {{ theme.text }} font-bold">{{ app.time }}</td>
+                        <td class="p-3 opacity-80">R$ {{ "%.2f"|format(app.price) }}</td>
+                        <td class="p-3">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ 'bg-emerald-500/20 text-emerald-400' if app.status == 'Concluído' else 'bg-cyan-500/20 text-cyan-400' }}">{{ app.status }}</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="p-4 text-center opacity-50">Nenhum corte registrado neste período.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const labelsData = JSON.parse('{{ chart_labels | tojson | safe }}');
+    const valuesData = JSON.parse('{{ chart_data | tojson | safe }}');
+
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labelsData,
+            datasets: [{
+                label: 'Faturamento (R$)',
+                data: valuesData,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } }
+            }
+        }
+    });
+</script>
+{% endblock %}
